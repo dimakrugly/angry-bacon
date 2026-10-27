@@ -27,7 +27,9 @@ function createBacon() {
   img.draggable = false;
   screen.appendChild(img);
 
-  const angle = random(0, Math.PI * 2);
+  // Diagonal like the DVD logo: 45° in a random quadrant, give or take 20°.
+  const quadrant = Math.floor(Math.random() * 4);
+  const angle = ((quadrant * 90 + 45 + random(-20, 20)) * Math.PI) / 180;
   const speed = random(SPEED_MIN, SPEED_MAX);
 
   return {
