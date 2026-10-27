@@ -1,9 +1,17 @@
-const button = document.getElementById('counter');
-let count = 0;
+// Background music. Browsers block sound until the visitor interacts with the
+// page, so if autoplay is refused it starts on the first click, tap or key.
+const music = document.getElementById('music');
+const unlockEvents = ['pointerdown', 'keydown', 'touchstart'];
 
-button.addEventListener('click', () => {
-  count += 1;
-  button.textContent = `Натиснуто: ${count}`;
+function playOnInteraction() {
+  music.play().then(() => {
+    unlockEvents.forEach((type) => window.removeEventListener(type, playOnInteraction));
+  }, () => {});
+}
+
+music.volume = 0.6;
+music.play().catch(() => {
+  unlockEvents.forEach((type) => window.addEventListener(type, playOnInteraction));
 });
 
 // DVD screensaver: bacon strips fly in straight lines and bounce off the
