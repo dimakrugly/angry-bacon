@@ -85,6 +85,7 @@ function step(dt) {
     const bh = bacon.img.offsetHeight;
     const maxX = Math.max(0, w - bw);
     const maxY = Math.max(0, h - bh);
+
     bacon.x += bacon.vx * dt;
     bacon.y += bacon.vy * dt;
 
@@ -128,9 +129,16 @@ function start() {
   }
 }
 
-// Start once every kind has loaded, so each strip knows its real size.
-Promise.all(
-  bacons.map(({ img }) =>
-    img.complete ? Promise.resolve() : new Promise((resolve) => img.addEventListener('load', resolve, { once: true })),
-  ),
-).then(start);
+// Start once every kind has loaded (or failed), so each strip knows its real size.
+function whenLoaded(img) {
+  if (img.complete) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    img.addEventListener('load', resolve, { once: true });
+    img.addEventListener('error', resolve, { once: true });
+  });
+}
+
+Promise.all(bacons.map(({ img }) => whenLoaded(img))).then(start);
