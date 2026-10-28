@@ -29,7 +29,6 @@ body {
   left: 0;
   width: clamp(80px, 12vw, 160px);
   height: auto;
-  will-change: transform, filter;
-  transition: filter 0.2s;
+  will-change: transform;
   user-select: none;
 }

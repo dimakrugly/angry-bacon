@@ -15,7 +15,14 @@ music.play().catch(() => {
 });
 
 // DVD screensaver: bacon strips fly in straight lines and bounce off the
-// screen edges, changing colour on every hit like the old DVD logo.
+// screen edges.
+const BACON_KINDS = [
+  'bacon-raw.png',
+  'bacon-wavy.png',
+  'bacon-fried-flat.png',
+  'bacon-fried.png',
+  'bacon-crispy.png',
+];
 const BACON_COUNT = 10;
 const SPEED_MIN = 90; // px per second
 const SPEED_MAX = 180;
@@ -27,9 +34,9 @@ function random(min, max) {
   return min + Math.random() * (max - min);
 }
 
-function createBacon() {
+function createBacon(_, index) {
   const img = document.createElement('img');
-  img.src = 'bacon.png';
+  img.src = BACON_KINDS[index % BACON_KINDS.length];
   img.alt = '';
   img.className = 'bacon';
   img.draggable = false;
@@ -46,19 +53,12 @@ function createBacon() {
     y: 0,
     vx: Math.cos(angle) * speed,
     vy: Math.sin(angle) * speed,
-    hue: 0,
     flip: Math.random() < 0.5 ? -1 : 1,
   };
 }
 
 function render(bacon) {
   bacon.img.style.transform = `translate3d(${bacon.x}px, ${bacon.y}px, 0) scaleX(${bacon.flip})`;
-  bacon.img.style.filter = `hue-rotate(${bacon.hue}deg) saturate(${bacon.hue ? 1.6 : 1})`;
-}
-
-function bounce(bacon) {
-  // Any colour except the one it already has.
-  bacon.hue = (bacon.hue + random(60, 300)) % 360;
 }
 
 const bacons = Array.from({ length: BACON_COUNT }, createBacon);
@@ -85,33 +85,23 @@ function step(dt) {
     const bh = bacon.img.offsetHeight;
     const maxX = Math.max(0, w - bw);
     const maxY = Math.max(0, h - bh);
-    let hit = false;
-
     bacon.x += bacon.vx * dt;
     bacon.y += bacon.vy * dt;
 
     if (bacon.x <= 0) {
       bacon.x = 0;
       bacon.vx = Math.abs(bacon.vx);
-      hit = true;
     } else if (bacon.x >= maxX) {
       bacon.x = maxX;
       bacon.vx = -Math.abs(bacon.vx);
-      hit = true;
     }
 
     if (bacon.y <= 0) {
       bacon.y = 0;
       bacon.vy = Math.abs(bacon.vy);
-      hit = true;
     } else if (bacon.y >= maxY) {
       bacon.y = maxY;
       bacon.vy = -Math.abs(bacon.vy);
-      hit = true;
-    }
-
-    if (hit) {
-      bounce(bacon);
     }
 
     render(bacon);
@@ -138,10 +128,9 @@ function start() {
   }
 }
 
-const firstImg = bacons[0].img;
-
-if (firstImg.complete) {
-  start();
-} else {
-  firstImg.addEventListener('load', start, { once: true });
-}
+// Start once every kind has loaded, so each strip knows its real size.
+Promise.all(
+  bacons.map(({ img }) =>
+    img.complete ? Promise.resolve() : new Promise((resolve) => img.addEventListener('load', resolve, { once: true })),
+  ),
+).then(start);
